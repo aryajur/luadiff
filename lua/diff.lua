@@ -11,9 +11,10 @@ local table = table
 local setmetatable = setmetatable
 local ipairs = ipairs
 local assert = assert
+local math = math
 
 -- For debugging
-local print = print
+--local print = print
 
 -- Create the module table here
 local M = {}
@@ -25,7 +26,7 @@ local SKIP_SEPARATOR = false  -- a constant
 IN   = "in"
 OUT  = "out"
 SAME = "same"  -- token statuses
-_VERSION = "1.14.09.23"
+_VERSION = "1.14.09.26"
 
 -----------------------------------------------------------------------------
 -- Split a string into tokens.  (Adapted from Gavin Kistner's split on
@@ -37,26 +38,26 @@ _VERSION = "1.14.09.23"
 -- @param skip_separator [optional] don't include the sepator in the results.     
 -- @return               A list of tokens.
 -----------------------------------------------------------------------------
-local function split(text, separator, skip_separator)
+function split(text, separator, skip_separator)
 	separator = separator or "%s+"
-	print("splitting")
+	--print("splitting")
 	local parts = {}  
 	local start = 1
 	local split_start, split_end = text:find(separator, start)
 	while split_start do
-		print("token pos:",start,split_start-1)
+		--print("token pos:",start,split_start-1)
 		if not(start > split_start-1) then
 			table.insert(parts, text:sub(start, split_start-1))
 		end
 		if not skip_separator then
-			print("add separator:",split_start,split_end)
+			--print("add separator:",split_start,split_end)
 			table.insert(parts, text:sub(split_start, split_end))
 		end
 		start = split_end + 1
 		split_start, split_end = text:find(separator, start)
 	end
 	if text:sub(start)~="" then
-		print("add rest:",start)
+		--print("add rest:",start)
 		table.insert(parts, text:sub(start) )
 	end
 	return parts
