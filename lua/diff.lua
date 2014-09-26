@@ -7,11 +7,25 @@
 -- License: MIT/X, see http://sputnik.freewisdom.org/en/License
 -----------------------------------------------------------------------------
 
-module(..., package.seeall)
+local table = table
+local setmetatable = setmetatable
+local ipairs = ipairs
+local assert = assert
 
-SKIP_SEPARATOR = true  -- a constant
+-- For debugging
+local print = print
 
-IN   = "in"; OUT  = "out"; SAME = "same"  -- token statuses
+-- Create the module table here
+local M = {}
+package.loaded[...] = M
+_ENV = M		-- Lua 5.2
+
+local SKIP_SEPARATOR = false  -- a constant
+
+IN   = "in"
+OUT  = "out"
+SAME = "same"  -- token statuses
+_VERSION = "1.14.09.23"
 
 -----------------------------------------------------------------------------
 -- Split a string into tokens.  (Adapted from Gavin Kistner's split on
@@ -23,23 +37,29 @@ IN   = "in"; OUT  = "out"; SAME = "same"  -- token statuses
 -- @param skip_separator [optional] don't include the sepator in the results.     
 -- @return               A list of tokens.
 -----------------------------------------------------------------------------
-function split(text, separator, skip_separator)
-   separator = separator or "%s+"
-   local parts = {}  
-   local start = 1
-   local split_start, split_end = text:find(separator, start)
-   while split_start do
-      table.insert(parts, text:sub(start, split_start-1))
-      if not skip_separator then
-         table.insert(parts, text:sub(split_start, split_end))
-      end
-      start = split_end + 1
-      split_start, split_end = text:find(separator, start)
-   end
-   if text:sub(start)~="" then
-      table.insert(parts, text:sub(start) )
-   end
-   return parts
+local function split(text, separator, skip_separator)
+	separator = separator or "%s+"
+	print("splitting")
+	local parts = {}  
+	local start = 1
+	local split_start, split_end = text:find(separator, start)
+	while split_start do
+		print("token pos:",start,split_start-1)
+		if not(start > split_start-1) then
+			table.insert(parts, text:sub(start, split_start-1))
+		end
+		if not skip_separator then
+			print("add separator:",split_start,split_end)
+			table.insert(parts, text:sub(split_start, split_end))
+		end
+		start = split_end + 1
+		split_start, split_end = text:find(separator, start)
+	end
+	if text:sub(start)~="" then
+		print("add rest:",start)
+		table.insert(parts, text:sub(start) )
+	end
+	return parts
 end
 
 
@@ -53,7 +73,7 @@ end
 -- @param t2             the second string.
 -- @return               the least common subsequence as a matrix.
 -----------------------------------------------------------------------------
-function quick_LCS(t1, t2)
+local function quick_LCS(t1, t2)
    local m = #t1
    local n = #t2
 
@@ -98,7 +118,7 @@ end
 -- @param text           The string to be escaped.
 -- @return               Escaped string.
 -----------------------------------------------------------------------------
-function escape_html(text)
+local function escape_html(text)
    text = text:gsub("&", "&amp;"):gsub(">","&gt;"):gsub("<","&lt;")
    text = text:gsub("\"", "&quot;")
    return text
@@ -111,7 +131,7 @@ end
 -- @param tokens         a table of {token, status} pairs.
 -- @return               an HTML string.
 -----------------------------------------------------------------------------
-function format_as_html(tokens)
+local function format_as_html(tokens)
    local diff_buffer = ""
    local token, status
    for i, token_record in ipairs(tokens) do
@@ -138,9 +158,10 @@ end
 --                       white space).
 -- @return               A list of annotated tokens.
 -----------------------------------------------------------------------------
-function diff(old, new, separator)
+function diff(old, new, separator,skip_sep)
    assert(old); assert(new)
-   new = split(new, separator); old = split(old, separator)
+   skip_sep = skip_sep or SKIP_SEPARATOR
+   new = split(new, separator, skip_sep); old = split(old, separator, skip_sep)
 
    -- First, compare the beginnings and ends of strings to remove the common
    -- prefix and suffix.  Chances are, there is only a small number of tokens
